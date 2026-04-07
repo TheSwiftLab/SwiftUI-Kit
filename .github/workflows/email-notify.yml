@@ -21,6 +21,7 @@ on:
 
 jobs:
   notify_by_email:
+    if: github.actor != 'coderabbitai[bot]'
     runs-on: ubuntu-latest
 
     steps:
