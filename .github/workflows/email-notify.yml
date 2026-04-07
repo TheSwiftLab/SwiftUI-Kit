@@ -3,7 +3,6 @@
 # PR 생성 시 이메일 발송
 # PR 병합 시 이메일 발송
 # PR 코드리뷰(라인 댓글) 시 이메일 발송
-# 이슈 생성 시 이메일 발송
 # 불필요한 항목은 출력하지 않음
 
 # 📧 이메일 알림을 위한 GitHub Actions
@@ -11,8 +10,6 @@
 name: Email Notifications
 
 on:
-  issues:
-    types: [opened]            # 이슈 생성 시
   pull_request:
     types: [opened, closed]    # PR 생성 및 병합 시
   issue_comment:
@@ -69,11 +66,6 @@ jobs:
             TITLE="${{ github.event.pull_request.title }}"
             LINK="${{ github.event.review.html_url }}"
             COMMENT="${{ github.event.review.body }}"
-
-          elif [[ "${{ github.event_name }}" == "issues" ]]; then
-            EVENT_LABEL="이슈 생성"
-            TITLE="${{ github.event.issue.title }}"
-            LINK="${{ github.event.issue.html_url }}"
 
           else
             echo "event_label=무시됨" >> $GITHUB_OUTPUT
