@@ -8,6 +8,9 @@
 import SwiftUI
 
 public struct SKSampleView: View {
+    
+    public init () {}
+    
     public var body: some View {
         Text(String(describing: Self.self))
     }
