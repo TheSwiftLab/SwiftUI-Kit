@@ -29,18 +29,18 @@ public struct SKWebView: UIViewRepresentable {
     
     // MARK: - Configuration
     let url: String
-    var refreshText: String
+    var refreshTitle: String
     var refreshTextColor: UIColor
     var refreshIndicatorColor: UIColor
-    var refreshScale: CGFloat
+    var refreshIndicatorScale: CGFloat
     var isRefreshEnabled: Bool
     
     public init(url: String) {
         self.url = url
-        self.refreshText = ""
+        self.refreshTitle = ""
         self.refreshTextColor = .label
         self.refreshIndicatorColor = .label
-        self.refreshScale = 0.7
+        self.refreshIndicatorScale = 0.7
         self.isRefreshEnabled = false
     }
 }
@@ -69,7 +69,7 @@ public extension SKWebView {
             
             // 새로고침 시 보여줄 텍스트 스타일 지정
             refreshControl.attributedTitle = NSAttributedString(
-                string: refreshText,
+                string: refreshTitle,
                 attributes: [.foregroundColor: refreshTextColor]
             )
             
@@ -78,8 +78,8 @@ public extension SKWebView {
             
             // 인디케이터 크기 조절
             refreshControl.transform = CGAffineTransform(
-                scaleX: refreshScale,
-                y: refreshScale
+                scaleX: refreshIndicatorScale,
+                y: refreshIndicatorScale
             )
             
             // reload

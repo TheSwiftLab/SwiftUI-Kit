@@ -42,7 +42,7 @@ public extension SKWebView {
     /// - Note: 이 설정은 `refreshable()`이 활성화된 경우에만 적용됩니다.
     func refreshTitle(_ text: String) -> Self {
         var copy = self
-        copy.refreshText = text
+        copy.refreshTitle = text
         return copy
     }
     
@@ -104,7 +104,7 @@ public extension SKWebView {
     ///   `CGAffineTransform`을 사용하여 크기를 조정합니다.
     func refreshIndicatorScale(_ scale: CGFloat) -> Self {
         var copy = self
-        copy.refreshScale = scale
+        copy.refreshIndicatorScale = scale
         return copy
     }
 }
