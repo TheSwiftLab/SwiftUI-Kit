@@ -1,8 +1,10 @@
 # ✅ 기능 요약
 #
-# PR 생성 시 이메일 발송
+# Draft PR 생성(opened) 시 이메일 발송 안 함
+# Draft → Ready for review 전환 시 이메일 발송
+# 일반 PR 생성 시 이메일 발송
 # PR 병합 시 이메일 발송
-# PR 코드리뷰(라인 댓글) 시 이메일 발송
+# PR 댓글 및 리뷰 알림 발송
 # 불필요한 항목은 출력하지 않음
 
 # 📧 이메일 알림을 위한 GitHub Actions
@@ -11,7 +13,7 @@ name: Email Notifications
 
 on:
   pull_request:
-    types: [opened, closed]    # PR 생성 및 병합 시
+    types: [opened, ready_for_review, closed]
   issue_comment:
     types: [created]           # PR에 달린 일반 댓글
   pull_request_review_comment:
@@ -32,11 +34,26 @@ jobs:
           BODY=""
 
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            
+            # Draft 상태로 생성된 PR이면 알림 제외
+            if [[ "${{ github.event.action }}" == "opened" && "${{ github.event.pull_request.draft }}" == "true" ]]; then
+              echo "event_label=무시됨" >> $GITHUB_OUTPUT
+              echo "body=Draft PR 생성이므로 알림 제외됨" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+
             if [[ "${{ github.event.action }}" == "closed" && "${{ github.event.pull_request.merged }}" == "true" ]]; then
               EVENT_LABEL="PR 병합"
-            else
+            elif [[ "${{ github.event.action }}" == "ready_for_review" ]]; then
+              EVENT_LABEL="PR 전환"
+            elif [[ "${{ github.event.action }}" == "opened" ]]; then
               EVENT_LABEL="PR 생성"
+            else
+              echo "event_label=무시됨" >> $GITHUB_OUTPUT
+              echo "body=처리 대상이 아닌 pull_request 이벤트입니다." >> $GITHUB_OUTPUT
+              exit 0
             fi
+
             TITLE="${{ github.event.pull_request.title }}"
             LINK="${{ github.event.pull_request.html_url }}"
 
@@ -78,7 +95,7 @@ jobs:
 
           BODY+="📌 이벤트 종류: $EVENT_LABEL"$'\n'
           BODY+="📁 리포지토리: ${{ github.repository }}"$'\n'
-          BODY+="🛠️ 액션: ${{ github.event.action || 'N/A' }}"$'\n'
+          BODY+="🛠️ 액션: ${{ github.event.action }}"$'\n'
           BODY+="📝 제목: ${TITLE:-N/A}"$'\n'
           BODY+="🙋 작성자: ${{ github.actor }}"$'\n'
           [[ -n "$LINK" ]] && BODY+="🔗 링크: $LINK"$'\n'
