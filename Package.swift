@@ -5,6 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "SwiftUI-Kit",
+    platforms: [.iOS(.v15)], // iOS 15 이상 지원
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
