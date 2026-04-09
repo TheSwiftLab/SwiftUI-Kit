@@ -10,7 +10,7 @@ import SwiftUI_Kit
 
 struct SampleSKWebView: View {
     var body: some View {
-        SKWebView(url: "https://www.naver.com")
+        SKWebView(url: URL(string: "https://www.naver.com")!)
             .refreshable()
             .refreshTitle("새로고침")
             .refreshIndicatorColor(.blue)

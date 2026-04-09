@@ -8,16 +8,19 @@
 import SwiftUI
 import WebKit
 
-/// SwiftUI에서 `WKWebView`를 사용할 수 있도록 감싼 웹뷰 Wrapper 입니다.
+/// SwiftUI에서 `WKWebView`를 사용할 수 있도록 감싼 웹뷰 래퍼입니다.
+///
+/// `URL`을 입력받아 웹 페이지를 로드하며,
+/// 필요에 따라 Pull to Refresh 기능을 활성화할 수 있습니다.
 ///
 /// 기본적으로 아래 기능을 제공합니다.
 /// - URL 로드
 /// - 선택적 Pull to Refresh
-/// - `WKNavigationDelegate`
+/// - `WKNavigationDelegate` 연결
 ///
 /// ## 사용 예시
 /// ```swift
-/// SKWebView(url: "https://www.naver.com")
+/// SKWebView(url: URL(string: "https://www.naver.com")!)
 ///     .refreshable()
 ///     .refreshTitle("새로고침")
 ///     .refreshIndicatorColor(.blue)
@@ -28,14 +31,14 @@ import WebKit
 public struct SKWebView: UIViewRepresentable {
     
     // MARK: - Configuration
-    let url: String
+    let url: URL
     var refreshTitle: String
     var refreshTextColor: UIColor
     var refreshIndicatorColor: UIColor
     var refreshIndicatorScale: CGFloat
     var isRefreshEnabled: Bool
     
-    public init(url: String) {
+    public init(url: URL) {
         self.url = url
         self.refreshTitle = ""
         self.refreshTextColor = .label
@@ -109,9 +112,8 @@ public extension SKWebView {
         _ uiView: WKWebView,
         context: Context
     ) {
-        guard let requestURL = URL(string: url) else { return }
-        guard uiView.url?.absoluteString != requestURL.absoluteString else { return }
-        uiView.load(URLRequest(url: requestURL))
+        guard uiView.url != url else { return }
+        uiView.load(URLRequest(url: url))
     }
 }
 
