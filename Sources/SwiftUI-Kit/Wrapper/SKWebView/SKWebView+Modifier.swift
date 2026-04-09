@@ -36,7 +36,7 @@ public extension SKWebView {
     /// ```swift
     /// SKWebView(url: url)
     ///     .refreshable()
-    ///     .refreshTitle("새로고침 중...")
+    ///     .refreshText("새로고침 중...")
     /// ```
     ///
     /// - Note: 이 설정은 `refreshable()`이 활성화된 경우에만 적용됩니다.
