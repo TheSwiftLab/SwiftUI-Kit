@@ -116,7 +116,7 @@ reviews:
     drafts: true
 
     # 커밋이 추가될 때마다 변경된 부분만 자동으로 재리뷰
-    auto_incremental_review: false
+    auto_incremental_review: true
 
 # ---------------------------------------------------------------- #
 # 채팅 기능 설정
