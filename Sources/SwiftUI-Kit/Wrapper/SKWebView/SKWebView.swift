@@ -22,7 +22,7 @@ import WebKit
 /// ```swift
 /// SKWebView(url: URL(string: "https://www.naver.com")!)
 ///     .refreshable()
-///     .refreshTitle("새로고침")
+///     .refreshText("새로고침")
 ///     .refreshIndicatorColor(.blue)
 ///     .refreshTextColor(.blue)
 ///     .refreshIndicatorScale(1.0)
@@ -32,7 +32,7 @@ public struct SKWebView: UIViewRepresentable {
     
     // MARK: - Configuration
     let url: URL
-    var refreshTitle: String
+    var refreshText: String
     var refreshTextColor: UIColor
     var refreshIndicatorColor: UIColor
     var refreshIndicatorScale: CGFloat
@@ -40,7 +40,7 @@ public struct SKWebView: UIViewRepresentable {
     
     public init(url: URL) {
         self.url = url
-        self.refreshTitle = ""
+        self.refreshText = ""
         self.refreshTextColor = .label
         self.refreshIndicatorColor = .label
         self.refreshIndicatorScale = 0.7
@@ -72,7 +72,7 @@ public extension SKWebView {
             
             // 새로고침 시 보여줄 텍스트 스타일 지정
             refreshControl.attributedTitle = NSAttributedString(
-                string: refreshTitle,
+                string: refreshText,
                 attributes: [.foregroundColor: refreshTextColor]
             )
             

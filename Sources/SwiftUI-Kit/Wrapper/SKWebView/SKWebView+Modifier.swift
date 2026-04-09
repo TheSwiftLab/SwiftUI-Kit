@@ -40,9 +40,9 @@ public extension SKWebView {
     /// ```
     ///
     /// - Note: 이 설정은 `refreshable()`이 활성화된 경우에만 적용됩니다.
-    func refreshTitle(_ text: String) -> Self {
+    func refreshText(_ text: String) -> Self {
         var copy = self
-        copy.refreshTitle = text
+        copy.refreshText = text
         return copy
     }
     

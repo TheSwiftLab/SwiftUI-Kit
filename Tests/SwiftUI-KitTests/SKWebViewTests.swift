@@ -23,8 +23,8 @@ struct SKWebViewTests {
     @Test("refreshTitle()은 새로고침 텍스트를 변경한다")
     func refreshTitle_updatesText() {
         let sut = SKWebView(url: URL(string: "https://www.apple.com")!)
-            .refreshTitle("새로고침...")
-        #expect(sut.refreshTitle == "새로고침...")
+            .refreshText("새로고침...")
+        #expect(sut.refreshText == "새로고침...")
     }
     
     @Test("refreshTextColor()는 텍스트 색상을 변경한다")
@@ -55,13 +55,13 @@ struct SKWebViewTests {
     func modifiers_chain_appliesAllConfigurations() {
         let sut = SKWebView(url: URL(string: "https://www.apple.com")!)
             .refreshable()
-            .refreshTitle("당겨서 새로고침")
+            .refreshText("당겨서 새로고침")
             .refreshTextColor(.blue)
             .refreshIndicatorColor(.green)
             .refreshIndicatorScale(0.9)
         
         #expect(sut.isRefreshEnabled == true)
-        #expect(sut.refreshTitle == "당겨서 새로고침")
+        #expect(sut.refreshText == "당겨서 새로고침")
         #expect(sut.refreshTextColor == UIColor(.blue))
         #expect(sut.refreshIndicatorColor == UIColor(.green))
         #expect(sut.refreshIndicatorScale == 0.9)

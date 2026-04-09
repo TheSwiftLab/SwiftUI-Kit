@@ -12,7 +12,7 @@ struct SampleSKWebView: View {
     var body: some View {
         SKWebView(url: URL(string: "https://www.naver.com")!)
             .refreshable()
-            .refreshTitle("새로고침")
+            .refreshText("새로고침")
             .refreshIndicatorColor(.blue)
             .refreshTextColor(.blue)
             .refreshIndicatorScale(1.0)
