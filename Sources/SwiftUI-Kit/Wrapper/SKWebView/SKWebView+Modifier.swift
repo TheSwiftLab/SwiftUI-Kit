@@ -57,13 +57,13 @@ public extension SKWebView {
     /// ```swift
     /// SKWebView(url: url)
     ///     .refreshable()
-    ///     .refreshTextColor(.systemBlue)
+    ///     .refreshTextColor(.blue)
     /// ```
     ///
     /// - Note: 이 설정은 `refreshable()`이 활성화된 경우에만 적용됩니다.
-    func refreshTextColor(_ color: UIColor) -> Self {
+    func refreshTextColor(_ color: Color) -> Self {
         var copy = self
-        copy.refreshTextColor = color
+        copy.refreshTextColor = UIColor(color)
         return copy
     }
     
@@ -78,13 +78,13 @@ public extension SKWebView {
     /// ```swift
     /// SKWebView(url: url)
     ///     .refreshable()
-    ///     .refreshIndicatorColor(.systemBlue)
+    ///     .refreshIndicatorColor(.blue)
     /// ```
     ///
     /// - Note: 이 설정은 `refreshable()`이 활성화된 경우에만 적용됩니다.
-    func refreshIndicatorColor(_ color: UIColor) -> Self {
+    func refreshIndicatorColor(_ color: Color) -> Self {
         var copy = self
-        copy.refreshIndicatorColor = color
+        copy.refreshIndicatorColor = UIColor(color)
         return copy
     }
     

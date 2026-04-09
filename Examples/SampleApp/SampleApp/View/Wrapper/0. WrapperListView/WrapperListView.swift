@@ -14,6 +14,7 @@ struct WrapperListView: View {
                 Section("") {
                     NavigationLink("SKWebView") {
                         SampleSKWebView()
+                            .toolbar(.hidden, for: .tabBar)
                     }
                 }
             }
