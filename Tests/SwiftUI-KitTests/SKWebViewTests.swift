@@ -6,6 +6,7 @@
 //
 
 import Testing
+import UIKit
 @testable import SwiftUI_Kit
 
 @MainActor
@@ -29,7 +30,7 @@ struct SKWebViewTests {
     @Test("refreshTextColor()는 텍스트 색상을 변경한다")
     func refreshTextColor_updatesColor() {
         let sut = SKWebView(url: "https://www.apple.com")
-            .refreshTextColor(.systemBlue)
+            .refreshTextColor(.blue)
         
         #expect(sut.refreshTextColor == .systemBlue)
     }
@@ -37,9 +38,9 @@ struct SKWebViewTests {
     @Test("refreshIndicatorColor()는 인디케이터 색상을 변경한다")
     func refreshIndicatorColor_updatesColor() {
         let sut = SKWebView(url: "https://www.apple.com")
-            .refreshIndicatorColor(.systemRed)
+            .refreshIndicatorColor(.red)
         
-        #expect(sut.refreshIndicatorColor == .systemRed)
+        #expect(sut.refreshIndicatorColor == UIColor(.red))
     }
     
     @Test("refreshIndicatorScale()은 인디케이터 크기를 변경한다")
@@ -55,14 +56,14 @@ struct SKWebViewTests {
         let sut = SKWebView(url: "https://www.apple.com")
             .refreshable()
             .refreshTitle("당겨서 새로고침")
-            .refreshTextColor(.systemBlue)
-            .refreshIndicatorColor(.systemGreen)
+            .refreshTextColor(.blue)
+            .refreshIndicatorColor(.green)
             .refreshIndicatorScale(0.9)
         
         #expect(sut.isRefreshEnabled == true)
         #expect(sut.refreshTitle == "당겨서 새로고침")
-        #expect(sut.refreshTextColor == .systemBlue)
-        #expect(sut.refreshIndicatorColor == .systemGreen)
+        #expect(sut.refreshTextColor == UIColor(.blue))
+        #expect(sut.refreshIndicatorColor == UIColor(.green))
         #expect(sut.refreshIndicatorScale == 0.9)
     }
 }
