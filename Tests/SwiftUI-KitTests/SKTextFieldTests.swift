@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 import Testing
 @testable import SwiftUI_Kit
 
@@ -14,12 +15,20 @@ struct SKTextFieldTests {
     
     @Test("LocalizedStringKey 생성자는 기본 구성이 가능하다")
     func localizedStringKeyInit_defaultConfiguration() {
-        let sut = SKTextField(
-            LocalizedStringKey("sample_title"),
-            text: .constant("")
+        let expectedTitle = Bundle.main.localizedString(
+            forKey: "sample_title",
+            value: "sample_title",
+            table: nil
+        )
+        let uiTextField = makeTextField(
+            rootView: SKTextField(
+                LocalizedStringKey("sample_title"),
+                text: .constant("")
+            )
         )
         
-        #expect(!String(describing: type(of: sut)).isEmpty)
+        #expect(uiTextField.attributedPlaceholder?.string == expectedTitle)
+        #expect(uiTextField.accessibilityLabel == expectedTitle)
     }
     
     @Test("LocalizedStringResource 생성자는 기본 구성이 가능하다")
@@ -28,150 +37,107 @@ struct SKTextFieldTests {
             return
         }
         
-        let sut = SKTextField(
-            LocalizedStringResource("sample_title"),
-            text: .constant("")
+        let expectedTitle = String(
+            localized: LocalizedStringResource("sample_title")
+        )
+        let uiTextField = makeTextField(
+            rootView: SKTextField(
+                LocalizedStringResource("sample_title"),
+                text: .constant("")
+            )
         )
         
-        #expect(!String(describing: type(of: sut)).isEmpty)
+        #expect(uiTextField.attributedPlaceholder?.string == expectedTitle)
+        #expect(uiTextField.accessibilityLabel == expectedTitle)
     }
     
     @Test("StringProtocol 생성자는 기본 구성이 가능하다")
     func stringProtocolInit_defaultConfiguration() {
-        let sut = SKTextField(
-            "Plain Title",
-            text: .constant("")
+        let uiTextField = makeTextField(
+            rootView: SKTextField(
+                "Plain Title",
+                text: .constant("")
+            )
         )
         
-        #expect(!String(describing: type(of: sut)).isEmpty)
+        #expect(uiTextField.attributedPlaceholder?.string == "Plain Title")
+        #expect(uiTextField.accessibilityLabel == "Plain Title")
     }
     
     @Test("focused(_:)는 Bool FocusState와 조합된다")
     func focused_bindBoolFocusState() {
-        let focusState = FocusState<Bool>()
-        let sut = SKTextField(
-            "Title",
-            text: .constant("")
+        let boolFocusModel = BoolFocusModel()
+        let uiTextField = makeTextField(
+            rootView: BoolFocusHostView(
+                boolFocusModel: boolFocusModel
+            )
         )
-        .focused(focusState.projectedValue)
         
-        #expect(!String(describing: type(of: sut)).isEmpty)
+        boolFocusModel.shouldFocus = true
+        runMainLoop()
+        #expect(uiTextField.isFirstResponder == true)
+        
+        boolFocusModel.shouldFocus = false
+        runMainLoop()
+        #expect(uiTextField.isFirstResponder == false)
     }
     
     @Test("focused(_:equals:)는 optional FocusState와 조합된다")
     func focused_bindOptionalFocusState() {
-        let focusState = FocusState<SampleField?>()
-        let sut = SKTextField(
-            "Title",
-            text: .constant("")
+        let valueFocusModel = ValueFocusModel()
+        let uiTextField = makeTextField(
+            rootView: ValueFocusHostView(
+                valueFocusModel: valueFocusModel
+            )
         )
-        .focused(focusState.projectedValue, equals: .plain)
         
-        #expect(!String(describing: type(of: sut)).isEmpty)
+        valueFocusModel.focusedField = .plain
+        runMainLoop()
+        #expect(uiTextField.isFirstResponder == true)
+        
+        valueFocusModel.focusedField = nil
+        runMainLoop()
+        #expect(uiTextField.isFirstResponder == false)
     }
     
-    @Test("horizontal container는 UITextField만 생성한다")
-    func horizontalContainer_createsTextFieldOnly() {
-        let sut = SKTextFieldContainer(axis: .horizontal)
-        
-        #expect(sut.uiTextField != nil)
-        #expect(sut.uiTextView == nil)
-        #expect(sut.activeResponder is UITextField)
-    }
-    
-    @Test("vertical container는 UITextView만 생성한다")
-    func verticalContainer_createsTextViewOnly() {
-        let sut = SKTextFieldContainer(axis: .vertical)
-        
-        #expect(sut.uiTextField == nil)
-        #expect(sut.uiTextView != nil)
-        #expect(sut.activeResponder is UITextView)
-    }
-    
-    @Test("coordinator는 UITextField 변경을 binding에 반영한다")
-    func coordinator_textFieldDidChange_updatesBinding() {
-        let textBox = TextBox()
-        let sut = makePresentable(
-            textBox: textBox,
-            axis: .horizontal,
-            placeholder: "Placeholder"
+    @Test("horizontal SKTextField는 UITextField를 렌더링하고 바인딩 값을 반영한다")
+    func horizontalTextField_rendersUIKitTextField() {
+        let textModel = TextModel()
+        let uiTextField = makeTextField(
+            rootView: HorizontalTextHostView(
+                textModel: textModel,
+                title: "Placeholder"
+            )
         )
-        let coordinator = sut.makeCoordinator()
-        let uiTextField = UITextField()
-        uiTextField.text = "Hello"
         
-        coordinator.textFieldDidChange(uiTextField)
+        #expect(uiTextField.attributedPlaceholder?.string == "Placeholder")
+        #expect(uiTextField.accessibilityLabel == "Placeholder")
         
-        #expect(textBox.text == "Hello")
+        textModel.text = "Hello"
+        runMainLoop()
+        
+        #expect(uiTextField.text == "Hello")
     }
     
-    @Test("coordinator는 UITextView 변경을 binding에 반영한다")
-    func coordinator_textViewDidChange_updatesBinding() {
-        let textBox = TextBox()
-        let sut = makePresentable(
-            textBox: textBox,
-            axis: .vertical,
-            placeholder: "Placeholder"
+    @Test("vertical SKTextField는 UITextView를 렌더링하고 placeholder를 표시한다")
+    func verticalTextField_rendersUIKitTextView() {
+        let textModel = TextModel()
+        let uiTextView = makeTextView(
+            rootView: VerticalTextHostView(
+                textModel: textModel,
+                title: "Placeholder"
+            )
         )
-        let coordinator = sut.makeCoordinator()
-        let uiTextView = UITextView()
-        uiTextView.text = "Multiline"
         
-        coordinator.textViewDidChange(uiTextView)
+        #expect(uiTextView.text == "Placeholder")
+        #expect(uiTextView.textColor == .placeholderText)
+        #expect(uiTextView.accessibilityLabel == "Placeholder")
         
-        #expect(textBox.text == "Multiline")
-    }
-    
-    @Test("coordinator는 UITextField focus 상태를 binding에 반영한다")
-    func coordinator_textFieldFocus_updatesBinding() {
-        let focusBox = BoolBox()
-        let sut = makePresentable(
-            textBox: TextBox(),
-            axis: .horizontal,
-            placeholder: "",
-            focusBinding: focusBox.binding
-        )
-        let coordinator = sut.makeCoordinator()
-        let uiTextField = UITextField()
+        textModel.text = "Multiline"
+        runMainLoop()
         
-        coordinator.textFieldDidBeginEditing(uiTextField)
-        #expect(focusBox.value == true)
-        
-        coordinator.textFieldDidEndEditing(uiTextField)
-        #expect(focusBox.value == false)
-    }
-    
-    @Test("coordinator는 UITextView placeholder를 적용한다")
-    func coordinator_applyPlaceholderIfNeeded_setsPlaceholder() {
-        let textBox = TextBox()
-        let sut = makePresentable(
-            textBox: textBox,
-            axis: .vertical,
-            placeholder: "Placeholder"
-        )
-        let coordinator = sut.makeCoordinator()
-        let container = SKTextFieldContainer(axis: .vertical)
-        
-        coordinator.applyConfiguration(to: container)
-        
-        #expect(container.uiTextView?.text == "Placeholder")
-        #expect(container.uiTextView?.textColor == .placeholderText)
-    }
-    
-    @Test("coordinator는 accessibilityLabel을 UIKit view에 반영한다")
-    func coordinator_applyConfiguration_updatesAccessibilityLabel() {
-        let sut = makePresentable(
-            textBox: TextBox(),
-            axis: .horizontal,
-            placeholder: "",
-            accessibilityLabel: "Sample Label"
-        )
-        let coordinator = sut.makeCoordinator()
-        let container = SKTextFieldContainer(axis: .horizontal)
-        
-        coordinator.applyConfiguration(to: container)
-        
-        #expect(container.uiTextField?.accessibilityLabel == "Sample Label")
+        #expect(uiTextView.text == "Multiline")
+        #expect(uiTextView.textColor == .label)
     }
 }
 
@@ -180,37 +146,161 @@ private extension SKTextFieldTests {
         case plain
     }
     
-    final class TextBox: @unchecked Sendable {
-        var text = ""
+    @MainActor
+    final class BoolFocusModel: ObservableObject {
+        @Published var shouldFocus = false
     }
     
-    final class BoolBox: @unchecked Sendable {
-        var value = false
+    @MainActor
+    final class ValueFocusModel: ObservableObject {
+        @Published var focusedField: SampleField?
+    }
+    
+    @MainActor
+    final class TextModel: ObservableObject {
+        @Published var text = ""
+    }
+    
+    struct BoolFocusHostView: View {
+        @ObservedObject var boolFocusModel: BoolFocusModel
+        @State private var text = ""
+        @FocusState private var isFocused: Bool
         
-        var binding: Binding<Bool> {
-            Binding(
-                get: { self.value },
-                set: { self.value = $0 }
+        var body: some View {
+            SKTextField(
+                "Title",
+                text: $text
+            )
+            .focused($isFocused)
+            .onAppear {
+                isFocused = boolFocusModel.shouldFocus
+            }
+            .onChange(of: boolFocusModel.shouldFocus) { newValue in
+                isFocused = newValue
+            }
+        }
+    }
+    
+    struct ValueFocusHostView: View {
+        @ObservedObject var valueFocusModel: ValueFocusModel
+        @State private var text = ""
+        @FocusState private var focusedField: SampleField?
+        
+        var body: some View {
+            SKTextField(
+                "Title",
+                text: $text
+            )
+            .focused($focusedField, equals: .plain)
+            .onAppear {
+                focusedField = valueFocusModel.focusedField
+            }
+            .onChange(of: valueFocusModel.focusedField) { newValue in
+                focusedField = newValue
+            }
+        }
+    }
+    
+    struct HorizontalTextHostView: View {
+        @ObservedObject var textModel: TextModel
+        let title: String
+        
+        var body: some View {
+            SKTextField(
+                title,
+                text: Binding(
+                    get: { textModel.text },
+                    set: { textModel.text = $0 }
+                )
             )
         }
     }
     
-    func makePresentable(
-        textBox: TextBox,
-        axis: Axis,
-        placeholder: String,
-        accessibilityLabel: String? = nil,
-        focusBinding: Binding<Bool>? = nil
-    ) -> SKTextFieldPresentable {
-        SKTextFieldPresentable(
-            text: Binding(
-                get: { textBox.text },
-                set: { textBox.text = $0 }
-            ),
-            axis: axis,
-            placeholder: placeholder,
-            accessibilityLabel: accessibilityLabel,
-            focusBinding: focusBinding
+    struct VerticalTextHostView: View {
+        @ObservedObject var textModel: TextModel
+        let title: String
+        
+        var body: some View {
+            SKTextField(
+                title,
+                text: Binding(
+                    get: { textModel.text },
+                    set: { textModel.text = $0 }
+                ),
+                axis: .vertical
+            )
+        }
+    }
+    
+    func makeTextField<Content: View>(
+        rootView: Content
+    ) -> UITextField {
+        let uiWindow = UIWindow(
+            frame: UIScreen.main.bounds
         )
+        let uiHostingController = UIHostingController(
+            rootView: rootView
+        )
+        
+        uiWindow.rootViewController = uiHostingController
+        uiWindow.makeKeyAndVisible()
+        runMainLoop()
+        
+        return findTextField(in: uiHostingController.view)
+        ?? UITextField()
+    }
+    
+    func makeTextView<Content: View>(
+        rootView: Content
+    ) -> UITextView {
+        let uiWindow = UIWindow(
+            frame: UIScreen.main.bounds
+        )
+        let uiHostingController = UIHostingController(
+            rootView: rootView
+        )
+        
+        uiWindow.rootViewController = uiHostingController
+        uiWindow.makeKeyAndVisible()
+        runMainLoop()
+        
+        return findTextView(in: uiHostingController.view)
+        ?? UITextView()
+    }
+    
+    func findTextField(in view: UIView) -> UITextField? {
+        if let uiTextField = view as? UITextField {
+            return uiTextField
+        }
+        
+        for subview in view.subviews {
+            if let uiTextField = findTextField(in: subview) {
+                return uiTextField
+            }
+        }
+        
+        return nil
+    }
+    
+    func findTextView(in view: UIView) -> UITextView? {
+        if let uiTextView = view as? UITextView {
+            return uiTextView
+        }
+        
+        for subview in view.subviews {
+            if let uiTextView = findTextView(in: subview) {
+                return uiTextView
+            }
+        }
+        
+        return nil
+    }
+    
+    func runMainLoop() {
+        for _ in 0..<5 {
+            RunLoop.main.run(
+                until: Date().addingTimeInterval(0.01)
+            )
+        }
     }
 }
