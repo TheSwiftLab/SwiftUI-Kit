@@ -12,6 +12,7 @@ final class SKTextFieldContainer: UIView {
     let uiTextView: UITextView?
     
     private let axis: Axis
+    private var lastIntrinsicContentSize: CGSize?
     
     init(axis: Axis) {
         self.axis = axis
@@ -59,6 +60,17 @@ final class SKTextFieldContainer: UIView {
         super.layoutSubviews()
         
         if let uiTextView {
+            let currentSize = bounds.size
+            
+            if let lastIntrinsicContentSize,
+               currentSize.isApproximatelyEqual(
+                to: lastIntrinsicContentSize,
+                epsilon: 0.5
+            ) {
+                return
+            }
+
+            self.lastIntrinsicContentSize = currentSize
             uiTextView.invalidateIntrinsicContentSize()
             invalidateIntrinsicContentSize()
         }
@@ -90,5 +102,15 @@ final class SKTextFieldContainer: UIView {
         }
         
         return uiTextView
+    }
+}
+
+private extension CGSize {
+    func isApproximatelyEqual(
+        to other: CGSize,
+        epsilon: CGFloat
+    ) -> Bool {
+        abs(width - other.width) <= epsilon
+        && abs(height - other.height) <= epsilon
     }
 }
