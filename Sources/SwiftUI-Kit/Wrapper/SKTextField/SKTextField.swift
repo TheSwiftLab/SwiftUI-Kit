@@ -11,7 +11,8 @@ public struct SKTextField<Label: View>: View {
     @Binding private var text: String
     private let axis: Axis
     private let title: Title
-    private var focusBinding: Binding<Bool>?
+    private var focusValue: (() -> Bool)?
+    private var onFocusChange: ((Bool) -> Void)?
     
     public init(
         _ titleKey: LocalizedStringKey,
@@ -21,7 +22,8 @@ public struct SKTextField<Label: View>: View {
         _text = text
         self.axis = axis
         title = .localized(titleKey)
-        focusBinding = nil
+        focusValue = nil
+        onFocusChange = nil
     }
     
     @available(iOS 16.0, macOS 13.0, tvOS 16.0, watchOS 9.0, *)
@@ -33,7 +35,8 @@ public struct SKTextField<Label: View>: View {
         _text = text
         self.axis = axis
         title = .plain(String(localized: titleResource))
-        focusBinding = nil
+        focusValue = nil
+        onFocusChange = nil
     }
     
     public init<S>(
@@ -44,7 +47,8 @@ public struct SKTextField<Label: View>: View {
         _text = text
         self.axis = axis
         self.title = .plain(String(title))
-        focusBinding = nil
+        focusValue = nil
+        onFocusChange = nil
     }
     
     public var body: some View {
@@ -53,13 +57,33 @@ public struct SKTextField<Label: View>: View {
             axis: axis,
             placeholder: placeholder,
             accessibilityLabel: accessibilityLabel,
-            focusBinding: focusBinding
+            focusBinding: {
+                if let focusValue, let onFocusChange {
+                    return Binding(
+                        get: {
+                            focusValue()
+                        },
+                        set: { newValue in
+                            onFocusChange(newValue)
+                        }
+                    )
+                }
+                
+                return nil
+            }()
         )
     }
     
     public func focused(_ condition: FocusState<Bool>.Binding) -> some View {
         var copy = self
-        copy.focusBinding = Binding(condition)
+        copy.focusValue = {
+            condition.wrappedValue
+        }
+        copy.onFocusChange = { newValue in
+            Task { @MainActor in
+                condition.wrappedValue = newValue
+            }
+        }
         
         return AnyView(copy)
             .focused(condition)
@@ -70,10 +94,18 @@ public struct SKTextField<Label: View>: View {
         equals value: Value
     ) -> some View where Value: Hashable & ExpressibleByNilLiteral {
         var copy = self
-        copy.focusBinding = Binding(
-            binding,
-            equals: value
-        )
+        copy.focusValue = {
+            binding.wrappedValue == value
+        }
+        copy.onFocusChange = { isFocused in
+            Task { @MainActor in
+                if isFocused {
+                    binding.wrappedValue = value
+                } else if binding.wrappedValue == value {
+                    binding.wrappedValue = nil
+                }
+            }
+        }
         
         return AnyView(copy)
             .focused(
@@ -103,49 +135,5 @@ public struct SKTextField<Label: View>: View {
     private enum Title {
         case localized(LocalizedStringKey)
         case plain(String)
-    }
-}
-
-private extension Binding where Value == Bool {
-    init(_ binding: FocusState<Bool>.Binding) {
-        nonisolated(unsafe) let unsafeBinding = binding
-        
-        self.init(
-            get: {
-                MainActor.assumeIsolated {
-                    unsafeBinding.wrappedValue
-                }
-            },
-            set: { newValue in
-                MainActor.assumeIsolated {
-                    unsafeBinding.wrappedValue = newValue
-                }
-            }
-        )
-    }
-    
-    init<FocusedValue>(
-        _ binding: FocusState<FocusedValue>.Binding,
-        equals value: FocusedValue
-    ) where FocusedValue: Hashable & ExpressibleByNilLiteral {
-        nonisolated(unsafe) let unsafeBinding = binding
-        nonisolated(unsafe) let unsafeValue = value
-        
-        self.init(
-            get: {
-                MainActor.assumeIsolated {
-                    unsafeBinding.wrappedValue == unsafeValue
-                }
-            },
-            set: { isFocused in
-                MainActor.assumeIsolated {
-                    if isFocused {
-                        unsafeBinding.wrappedValue = unsafeValue
-                    } else if unsafeBinding.wrappedValue == unsafeValue {
-                        unsafeBinding.wrappedValue = nil
-                    }
-                }
-            }
-        )
     }
 }
