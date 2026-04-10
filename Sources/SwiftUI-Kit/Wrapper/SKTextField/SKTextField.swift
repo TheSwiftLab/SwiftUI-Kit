@@ -40,6 +40,7 @@ import SwiftUI
 /// ```
 public struct SKTextField<Label: View>: View {
     @Binding private var text: String
+    @Environment(\.locale) private var locale
     private let axis: Axis
     private let title: Title
     private var focusValue: (() -> Bool)?
@@ -99,7 +100,11 @@ public struct SKTextField<Label: View>: View {
     ) where Label == Text {
         _text = text
         self.axis = axis
-        title = .plain(String(localized: titleResource))
+        title = .localizedResource { locale in
+            var localizedStringResource = titleResource
+            localizedStringResource.locale = locale
+            return String(localized: localizedStringResource)
+        }
         focusValue = nil
         onFocusChange = nil
     }
@@ -232,6 +237,8 @@ public struct SKTextField<Label: View>: View {
         switch title {
         case .localized(let localizedStringKey):
             return localizedStringKey.skResolvedString ?? ""
+        case .localizedResource(let localizedResource):
+            return localizedResource(locale)
         case .plain(let plainText):
             return plainText
         }
@@ -241,6 +248,8 @@ public struct SKTextField<Label: View>: View {
         switch title {
         case .localized(let localizedStringKey):
             return localizedStringKey.skResolvedString
+        case .localizedResource(let localizedResource):
+            return localizedResource(locale)
         case .plain(let plainText):
             return plainText
         }
@@ -248,6 +257,7 @@ public struct SKTextField<Label: View>: View {
     
     private enum Title {
         case localized(LocalizedStringKey)
+        case localizedResource((Locale) -> String)
         case plain(String)
     }
 }
