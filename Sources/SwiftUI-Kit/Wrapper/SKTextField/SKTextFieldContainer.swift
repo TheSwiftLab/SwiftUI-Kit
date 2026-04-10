@@ -1,0 +1,94 @@
+//
+//  SKTextFieldContainer.swift
+//  SwiftUI-Kit
+//
+//  Created by 최윤진 on 4/10/26.
+//
+
+import SwiftUI
+
+final class SKTextFieldContainer: UIView {
+    let uiTextField: UITextField?
+    let uiTextView: UITextView?
+    
+    private let axis: Axis
+    
+    init(axis: Axis) {
+        self.axis = axis
+        
+        if axis == .horizontal {
+            uiTextField = UITextField()
+            uiTextView = nil
+        } else {
+            uiTextField = nil
+            uiTextView = UITextView()
+        }
+        
+        super.init(frame: .zero)
+        backgroundColor = .clear
+        setupLayout()
+    }
+    
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { nil }
+    
+    override var intrinsicContentSize: CGSize {
+        if let uiTextView {
+            let width = bounds.width
+            let resolvedWidth = 0 < width ? width : UIScreen.main.bounds.width
+            let fittingSize = uiTextView.sizeThatFits(
+                CGSize(
+                    width: resolvedWidth,
+                    height: .greatestFiniteMagnitude
+                )
+            )
+            
+            return CGSize(
+                width: UIView.noIntrinsicMetric,
+                height: max(
+                    ceil(fittingSize.height),
+                    UIFont.preferredFont(forTextStyle: .body).lineHeight
+                )
+            )
+        }
+        
+        return uiTextField?.intrinsicContentSize ?? .zero
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        if let uiTextView {
+            uiTextView.invalidateIntrinsicContentSize()
+            invalidateIntrinsicContentSize()
+        }
+    }
+    
+    func invalidateTextViewIntrinsicContentSize() {
+        uiTextView?.invalidateIntrinsicContentSize()
+        invalidateIntrinsicContentSize()
+    }
+    
+    private func setupLayout() {
+        let subview = axis == .horizontal ? uiTextField : uiTextView
+        guard let subview else { return }
+        
+        subview.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(subview)
+        
+        NSLayoutConstraint.activate([
+            subview.leadingAnchor.constraint(equalTo: leadingAnchor),
+            subview.trailingAnchor.constraint(equalTo: trailingAnchor),
+            subview.topAnchor.constraint(equalTo: topAnchor),
+            subview.bottomAnchor.constraint(equalTo: bottomAnchor)
+        ])
+    }
+    
+    var activeResponder: UIResponder? {
+        if axis == .horizontal {
+            return uiTextField
+        }
+        
+        return uiTextView
+    }
+}
