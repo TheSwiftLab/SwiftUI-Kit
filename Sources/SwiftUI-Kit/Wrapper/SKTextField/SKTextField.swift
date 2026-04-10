@@ -57,7 +57,7 @@ public struct SKTextField<Label: View>: View {
         )
     }
     
-    func focused(_ condition: FocusState<Bool>.Binding) -> some View {
+    public func focused(_ condition: FocusState<Bool>.Binding) -> some View {
         var copy = self
         copy.focusBinding = Binding(condition)
         
@@ -65,7 +65,7 @@ public struct SKTextField<Label: View>: View {
             .focused(condition)
     }
     
-    func focused<Value>(
+    public func focused<Value>(
         _ binding: FocusState<Value>.Binding,
         equals value: Value
     ) -> some View where Value: Hashable & ExpressibleByNilLiteral {
