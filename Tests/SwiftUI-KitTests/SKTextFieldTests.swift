@@ -176,12 +176,8 @@ struct SKTextFieldTests {
 }
 
 private extension SKTextFieldTests {
-    enum SampleField: Hashable, ExpressibleByNilLiteral {
+    enum SampleField: Hashable {
         case plain
-        
-        init(nilLiteral: ()) {
-            self = .plain
-        }
     }
     
     final class TextBox: @unchecked Sendable {
