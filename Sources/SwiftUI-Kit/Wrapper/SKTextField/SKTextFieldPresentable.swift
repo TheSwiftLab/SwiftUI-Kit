@@ -100,6 +100,7 @@ extension SKTextFieldPresentable {
         private var offsetObservation: NSKeyValueObservation?
         private var trackedOffset: CGPoint?
         private var isRestoringOffset = false
+        private var isShowingPlaceholder = false
 
         init(_ parent: SKTextFieldPresentable) {
             self.parent = parent
@@ -128,9 +129,10 @@ extension SKTextFieldPresentable {
         }
 
         func textViewDidBeginEditing(_ uiTextView: UITextView) {
-            if isShowingPlaceholder(in: uiTextView) {
+            if isShowingPlaceholder {
                 uiTextView.text = nil
                 uiTextView.textColor = .label
+                isShowingPlaceholder = false
             }
 
             if let focusBinding = parent.focusBinding, !focusBinding.wrappedValue {
@@ -149,6 +151,7 @@ extension SKTextFieldPresentable {
         func textViewDidChange(_ uiTextView: UITextView) {
             stopTrackingOffset()
             parent.text = uiTextView.text
+            isShowingPlaceholder = false
             uiTextView.invalidateIntrinsicContentSize()
             uiTextView.superview?.invalidateIntrinsicContentSize()
         }
@@ -184,8 +187,9 @@ extension SKTextFieldPresentable {
             }
 
             if let uiTextView = container.uiTextView {
-                if !isShowingPlaceholder(in: uiTextView) && uiTextView.text != parent.text {
+                if !isShowingPlaceholder && uiTextView.text != parent.text {
                     uiTextView.text = parent.text
+                    isShowingPlaceholder = false
                 }
 
                 applyPlaceholderIfNeeded(to: uiTextView)
@@ -210,14 +214,12 @@ extension SKTextFieldPresentable {
             if parent.text.isEmpty && !uiTextView.isFirstResponder && !parent.placeholder.isEmpty {
                 uiTextView.text = parent.placeholder
                 uiTextView.textColor = .placeholderText
-            } else if isShowingPlaceholder(in: uiTextView) {
+                isShowingPlaceholder = true
+            } else if isShowingPlaceholder {
                 uiTextView.text = parent.text
                 uiTextView.textColor = .label
+                isShowingPlaceholder = false
             }
-        }
-
-        func isShowingPlaceholder(in uiTextView: UITextView) -> Bool {
-            uiTextView.textColor == .placeholderText
         }
 
         func syncFocus(in container: SKTextFieldContainer) {
