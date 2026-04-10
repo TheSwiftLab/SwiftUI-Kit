@@ -16,8 +16,13 @@ struct WrapperListView: View {
                         SampleSKWebView()
                             .toolbar(.hidden, for: .tabBar)
                     }
+                    NavigationLink("SKTextField") {
+                        SampleSKTextFieldView()
+                            .toolbar(.hidden, for: .tabBar)
+                    }
                 }
             }
+            .navigationTitle("Wrapper List")
         }
     }
 }
