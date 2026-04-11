@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -euo pipefail
 VERSION=$1
 
 if [ -z "$VERSION" ]; then
