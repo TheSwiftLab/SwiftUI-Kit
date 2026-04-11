@@ -33,7 +33,7 @@ struct SKTextFieldTests {
     
     @Test("LocalizedStringResource 생성자는 기본 구성이 가능하다")
     func localizedStringResourceInit_defaultConfiguration() throws {
-        guard #available(iOS 16.0, macOS 13.0, tvOS 16.0, watchOS 9.0, *) else {
+        guard #available(iOS 16.0, *) else {
             return
         }
         

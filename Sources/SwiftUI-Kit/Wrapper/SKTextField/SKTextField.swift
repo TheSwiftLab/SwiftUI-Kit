@@ -92,7 +92,7 @@ public struct SKTextField<Label: View>: View {
     ///     axis: .vertical
     /// )
     /// ```
-    @available(iOS 16.0, macOS 13.0, tvOS 16.0, watchOS 9.0, *)
+    @available(iOS 16.0, *)
     public init(
         _ titleResource: LocalizedStringResource,
         text: Binding<String>,
