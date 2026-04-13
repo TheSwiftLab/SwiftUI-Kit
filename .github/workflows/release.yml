@@ -1,0 +1,101 @@
+# Usage:
+#   GitHub Actions > Release > Run workflow에서 실행합니다.
+#
+#   version:
+#     릴리즈 버전입니다. 예: 1.0.0, 1.2.3-beta.1
+#
+#   operation:
+#     release        새 태그를 생성하고 GitHub Release를 만듭니다.
+#     retag-release  기존 태그를 target_branch의 현재 HEAD로 강제 이동합니다.
+#
+#   target_branch:
+#     릴리즈 기준 브랜치입니다. 기본값은 main입니다.
+#
+# Permissions:
+#   tags push와 GitHub Release 생성을 위해 contents: write 권한이 필요합니다.
+#   레포 설정의 Actions > Workflow permissions에서 Read and write permissions가 허용되어야 합니다.
+
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version, e.g. 1.0.0"
+        required: true
+        type: string
+      operation:
+        description: "Release operation"
+        required: true
+        default: "release"
+        type: choice
+        options:
+          - release
+          - retag-release
+      target_branch:
+        description: "Branch to release from"
+        required: true
+        default: "main"
+        type: string
+
+run-name: "${{ inputs.operation }} ${{ inputs.version }} from ${{ inputs.target_branch }}"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout target branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.target_branch }}
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Validate version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid version: $VERSION"
+            echo "Use a SemVer-like value such as 1.0.0."
+            exit 1
+          fi
+
+      - name: Create release
+        if: inputs.operation == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "Tag already exists: $VERSION"
+            exit 1
+          fi
+
+          git tag -a "$VERSION" -m "release: $VERSION"
+          git push origin "$VERSION"
+
+          gh release create "$VERSION" \
+            --title "$VERSION" \
+            --notes "Release $VERSION"
+
+      - name: Move existing tag
+        if: inputs.operation == 'retag-release'
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          git tag -fa "$VERSION" -m "release: $VERSION"
+          git push origin "$VERSION" --force
