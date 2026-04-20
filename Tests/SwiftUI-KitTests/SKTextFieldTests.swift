@@ -153,8 +153,8 @@ struct SKTextFieldTests {
         #expect(submitModel.submitCount == 1)
     }
 
-    @Test("onSubmit은 vertical SKTextField 제출 시 실행된다")
-    func onSubmit_verticalTextView() {
+    @Test("onSubmit은 vertical SKTextField에서 소프트웨어 개행을 허용한다")
+    func onSubmit_verticalTextView_withSoftwareKeyboard() {
         let submitModel = SubmitModel()
         let uiTextView = makeTextView(
             rootView: SubmitVerticalHostView(
@@ -162,14 +162,37 @@ struct SKTextFieldTests {
             )
         )
 
-        let shouldChange = uiTextView.delegate?.textView?(
-            uiTextView,
-            shouldChangeTextIn: NSRange(location: 0, length: 0),
-            replacementText: "\n"
+        let becomeFirstResponder = uiTextView.becomeFirstResponder()
+        runMainLoop()
+
+        uiTextView.insertText("A")
+        uiTextView.insertText("\n")
+        runMainLoop()
+
+        #expect(becomeFirstResponder == true)
+        #expect(uiTextView.text == "A\n")
+        #expect(submitModel.submitCount == 0)
+    }
+
+    @Test("onSubmit은 vertical SKTextField에서 하드웨어 제출 후 포커스를 해제한다")
+    func onSubmit_verticalTextView_withHardwareKeyboard() {
+        let submitModel = SubmitModel()
+        let uiTextView = makeTextView(
+            rootView: SubmitVerticalHostView(
+                submitModel: submitModel
+            )
         )
 
-        #expect(shouldChange == false)
+        let becomeFirstResponder = uiTextView.becomeFirstResponder()
+        runMainLoop()
+
+        (uiTextView as? SKTextView)?
+            .triggerHardwareSubmit()
+        runMainLoop()
+
+        #expect(becomeFirstResponder == true)
         #expect(submitModel.submitCount == 1)
+        #expect(uiTextView.isFirstResponder == false)
     }
 }
 
