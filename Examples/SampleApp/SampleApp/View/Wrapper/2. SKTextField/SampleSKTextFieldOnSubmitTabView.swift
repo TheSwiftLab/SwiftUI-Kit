@@ -50,7 +50,7 @@ struct SampleSKTextFieldOnSubmitTabView: View {
                     SampleSKTextFieldBlock(
                         text: $multiLineText,
                         title: "여러 줄 입력",
-                        axisDescription: "return 키 입력 시 줄바꿈 대신 onSubmit 실행",
+                        axisDescription: "하드웨어 키보드 Return은 onSubmit, 소프트웨어 키보드 Return은 줄바꿈",
                         field: {
                             SKTextField(
                                 "메시지를 입력해 주세요",
