@@ -25,6 +25,11 @@ public struct SampleSKTextFieldView: View {
                 .tabItem {
                     Label("문자열", systemImage: "character")
                 }
+
+            SampleSKTextFieldOnSubmitTabView()
+                .tabItem {
+                    Label("onSubmit", systemImage: "arrow.turn.down.left")
+                }
         }
     }
 }
