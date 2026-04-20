@@ -45,7 +45,6 @@ public struct SKTextField<Label: View>: View {
     private let title: Title
     private var focusValue: (() -> Bool)?
     private var onFocusChange: ((Bool) -> Void)?
-    private var submitTriggers: SubmitTriggers = []
     private var onSubmitAction: (() -> Void)?
     
     /// 로컬라이즈된 제목 문자열로 텍스트 필드를 생성합니다.
@@ -164,7 +163,7 @@ public struct SKTextField<Label: View>: View {
 
     /// onSubmit 시 실행할 동작을 등록합니다.
     ///
-    /// SwiftUI `View.onSubmit(of:_:)`와 같은 형태로 사용할 수 있습니다.
+    /// SwiftUI `View.onSubmit(_:)`와 같은 형태로 사용할 수 있습니다.
     ///
     /// ## 사용 예시
     /// ```swift
@@ -187,16 +186,10 @@ public struct SKTextField<Label: View>: View {
     ///     }
     /// ```
     ///
-    /// - Parameters:
-    ///   - triggers: onSubmit을 수신할 트리거입니다. `SKTextField`는 `.text`만 처리합니다.
-    ///   - action: onSubmit 시 실행할 클로저입니다.
-    public func onSubmit(
-        of triggers: SubmitTriggers = .text,
-        _ action: @escaping () -> Void
-    ) -> Self {
+    /// - Parameter action: onSubmit 시 실행할 클로저입니다.
+    public func onSubmit(_ action: @escaping () -> Void) -> Self {
         var copy = self
         let previousAction = copy.onSubmitAction
-        copy.submitTriggers.formUnion(triggers)
         copy.onSubmitAction = {
             previousAction?()
             action()
@@ -301,10 +294,6 @@ public struct SKTextField<Label: View>: View {
     }
 
     private var submitAction: (() -> Void)? {
-        guard submitTriggers.contains(.text) else {
-            return nil
-        }
-
         return onSubmitAction
     }
     

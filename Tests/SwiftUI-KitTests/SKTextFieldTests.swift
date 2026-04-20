@@ -200,6 +200,7 @@ struct SKTextFieldTests {
         #expect(submitModel.submitCount == 1)
         #expect(uiTextView.isFirstResponder == false)
     }
+
 }
 
 private extension SKTextFieldTests {
@@ -328,7 +329,7 @@ private extension SKTextFieldTests {
             }
         }
     }
-    
+
     func makeTextField<Content: View>(
         rootView: Content
     ) -> UITextField {
