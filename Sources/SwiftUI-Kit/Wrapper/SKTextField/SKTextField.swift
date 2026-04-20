@@ -45,6 +45,8 @@ public struct SKTextField<Label: View>: View {
     private let title: Title
     private var focusValue: (() -> Bool)?
     private var onFocusChange: ((Bool) -> Void)?
+    private var submitTriggers: SubmitTriggers = []
+    private var onSubmitAction: (() -> Void)?
     
     /// 로컬라이즈된 제목 문자열로 텍스트 필드를 생성합니다.
     ///
@@ -142,6 +144,7 @@ public struct SKTextField<Label: View>: View {
             axis: axis,
             placeholder: placeholder,
             accessibilityLabel: accessibilityLabel,
+            onSubmit: submitAction,
             focusBinding: {
                 if let focusValue, let onFocusChange {
                     return Binding(
@@ -253,6 +256,14 @@ public struct SKTextField<Label: View>: View {
         case .plain(let plainText):
             return plainText
         }
+    }
+
+    private var submitAction: (() -> Void)? {
+        guard submitTriggers.contains(.text) else {
+            return nil
+        }
+
+        return onSubmitAction
     }
     
     private enum Title {
