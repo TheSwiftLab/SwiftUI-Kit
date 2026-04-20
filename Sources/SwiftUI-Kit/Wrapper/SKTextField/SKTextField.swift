@@ -173,6 +173,9 @@ public struct SKTextField<Label: View>: View {
     /// onSubmit 시 실행할 동작을 등록합니다.
     ///
     /// SwiftUI `View.onSubmit(_:)`와 같은 형태로 사용할 수 있습니다.
+    /// `SKTextField`가 한 줄 입력(`axis: .horizontal`)인 경우에는 Return 입력 시 `onSubmit`이 실행됩니다.
+    /// 여러 줄 입력(`axis: .vertical`)인 경우에는 소프트웨어 키보드의 Return 입력이 줄바꿈으로 처리되고,
+    /// 하드웨어 키보드의 Return 입력일 때만 `onSubmit`이 실행됩니다.
     ///
     /// ## 사용 예시
     /// ```swift
