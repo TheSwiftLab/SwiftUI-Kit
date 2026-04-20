@@ -12,6 +12,7 @@ struct SKTextFieldPresentable: UIViewRepresentable {
     let axis: Axis
     let placeholder: String
     let accessibilityLabel: String?
+    let onSubmit: (() -> Void)?
     let focusBinding: Binding<Bool>?
 
     func makeCoordinator() -> Coordinator {
@@ -92,7 +93,6 @@ struct SKTextFieldPresentable: UIViewRepresentable {
 }
 
 extension SKTextFieldPresentable {
-
     final class Coordinator: NSObject, UITextFieldDelegate, UITextViewDelegate {
         var parent: SKTextFieldPresentable
 
@@ -121,6 +121,11 @@ extension SKTextFieldPresentable {
             if let focusBinding = parent.focusBinding, focusBinding.wrappedValue {
                 focusBinding.wrappedValue = false
             }
+        }
+
+        func textFieldShouldReturn(_ uiTextField: UITextField) -> Bool {
+            parent.onSubmit?()
+            return true
         }
 
         func textViewShouldBeginEditing(_ uiTextView: UITextView) -> Bool {
@@ -165,6 +170,19 @@ extension SKTextFieldPresentable {
             applyPlaceholderIfNeeded(to: uiTextView)
             uiTextView.invalidateIntrinsicContentSize()
             uiTextView.superview?.invalidateIntrinsicContentSize()
+        }
+
+        func textView(
+            _ uiTextView: UITextView,
+            shouldChangeTextIn range: NSRange,
+            replacementText text: String
+        ) -> Bool {
+            guard text == "\n", parent.onSubmit != nil else {
+                return true
+            }
+
+            parent.onSubmit?()
+            return false
         }
 
         func applyConfiguration(to container: SKTextFieldContainer) {
