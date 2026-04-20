@@ -139,7 +139,7 @@ struct SKTextFieldTests {
         #expect(uiTextView.textColor == .label)
     }
 
-    @Test("onSubmit은 horizontal SKTextField 제출 시 실행된다")
+    @Test("onSubmit은 horizontal SKTextField에서 동작 후 포커스를 해제한다")
     func onSubmit_horizontalTextField() {
         let submitModel = SubmitModel()
         let uiTextField = makeTextField(
@@ -148,9 +148,15 @@ struct SKTextFieldTests {
             )
         )
 
-        _ = uiTextField.delegate?.textFieldShouldReturn?(uiTextField)
+        let becomeFirstResponder = uiTextField.becomeFirstResponder()
+        runMainLoop()
 
+        _ = uiTextField.delegate?.textFieldShouldReturn?(uiTextField)
+        runMainLoop()
+
+        #expect(becomeFirstResponder == true)
         #expect(submitModel.submitCount == 1)
+        #expect(uiTextField.isFirstResponder == false)
     }
 
     @Test("onSubmit은 vertical SKTextField에서 소프트웨어 개행을 허용한다")
@@ -174,7 +180,7 @@ struct SKTextFieldTests {
         #expect(submitModel.submitCount == 0)
     }
 
-    @Test("onSubmit은 vertical SKTextField에서 하드웨어 제출 후 포커스를 해제한다")
+    @Test("onSubmit은 vertical SKTextField에서 하드웨어 입력일 때 동작 후 포커스를 해제한다")
     func onSubmit_verticalTextView_withHardwareKeyboard() {
         let submitModel = SubmitModel()
         let uiTextView = makeTextView(
