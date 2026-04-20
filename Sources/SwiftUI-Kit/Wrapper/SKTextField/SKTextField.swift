@@ -161,6 +161,48 @@ public struct SKTextField<Label: View>: View {
             }()
         )
     }
+
+    /// 텍스트 제출 시 실행할 동작을 등록합니다.
+    ///
+    /// SwiftUI `View.onSubmit(of:_:)`와 같은 형태로 사용할 수 있습니다.
+    ///
+    /// ## 사용 예시
+    /// ```swift
+    /// @State private var message = ""
+    /// @State private var submittedMessage = ""
+    ///
+    /// SKTextField("메시지", text: $message)
+    ///     .onSubmit {
+    ///         submittedMessage = message
+    ///     }
+    /// ```
+    ///
+    /// ```swift
+    /// @State private var note = ""
+    /// @State private var submittedNote = ""
+    ///
+    /// SKTextField("메모", text: $note, axis: .vertical)
+    ///     .onSubmit {
+    ///         submittedNote = note
+    ///     }
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - triggers: 제출을 수신할 트리거입니다. `SKTextField`는 `.text`만 처리합니다.
+    ///   - action: 제출 시 실행할 클로저입니다.
+    public func onSubmit(
+        of triggers: SubmitTriggers = .text,
+        _ action: @escaping () -> Void
+    ) -> Self {
+        var copy = self
+        let previousAction = copy.onSubmitAction
+        copy.submitTriggers.formUnion(triggers)
+        copy.onSubmitAction = {
+            previousAction?()
+            action()
+        }
+        return copy
+    }
     
     /// `Bool` 기반 `FocusState`와 텍스트 필드를 연결합니다.
     ///
