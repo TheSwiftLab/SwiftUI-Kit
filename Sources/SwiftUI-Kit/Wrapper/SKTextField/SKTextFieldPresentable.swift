@@ -122,6 +122,14 @@ extension SKTextFieldPresentable {
 
             if let uiTextView = container.uiTextView {
                 applyPlaceholderIfNeeded(to: uiTextView)
+                if parent.onSubmit == nil {
+                    uiTextView.onHardwareSubmit = nil
+                } else {
+                    uiTextView.onHardwareSubmit = {
+                        [weak self] in
+                        self?.handleHardwareSubmit()
+                    }
+                }
             }
         }
 
@@ -256,6 +264,10 @@ extension SKTextFieldPresentable {
             uiTextView.invalidateIntrinsicContentSize()
             uiTextView.superview?.invalidateIntrinsicContentSize()
         }
+
+        func handleHardwareSubmit() {
+            parent.onSubmit?()
+        }
     }
 }
 
@@ -308,19 +320,6 @@ extension SKTextFieldPresentable.Coordinator: UITextViewDelegate {
         stopTrackingOffset()
         applyPlaceholderIfNeeded(to: uiTextView)
         invalidateTextViewLayout(uiTextView)
-    }
-
-    func textView(
-        _ uiTextView: UITextView,
-        shouldChangeTextIn range: NSRange,
-        replacementText text: String
-    ) -> Bool {
-        guard text == "\n", parent.onSubmit != nil else {
-            return true
-        }
-
-        parent.onSubmit?()
-        return false
     }
 }
 
