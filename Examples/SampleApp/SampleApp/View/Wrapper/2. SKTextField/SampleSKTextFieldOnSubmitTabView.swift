@@ -104,8 +104,8 @@ private struct SampleSKTextFieldSubmitSummary: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("마지막 제출 값: \(submittedLabel)")
-            Text("제출 횟수: \(submitCount)")
+            Text("마지막 Submit 값: \(submittedLabel)")
+            Text("Submit 횟수: \(submitCount)")
         }
         .font(.caption)
         .foregroundStyle(.secondary)

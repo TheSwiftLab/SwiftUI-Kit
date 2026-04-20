@@ -162,7 +162,7 @@ public struct SKTextField<Label: View>: View {
         )
     }
 
-    /// 텍스트 제출 시 실행할 동작을 등록합니다.
+    /// onSubmit 시 실행할 동작을 등록합니다.
     ///
     /// SwiftUI `View.onSubmit(of:_:)`와 같은 형태로 사용할 수 있습니다.
     ///
@@ -188,8 +188,8 @@ public struct SKTextField<Label: View>: View {
     /// ```
     ///
     /// - Parameters:
-    ///   - triggers: 제출을 수신할 트리거입니다. `SKTextField`는 `.text`만 처리합니다.
-    ///   - action: 제출 시 실행할 클로저입니다.
+    ///   - triggers: onSubmit을 수신할 트리거입니다. `SKTextField`는 `.text`만 처리합니다.
+    ///   - action: onSubmit 시 실행할 클로저입니다.
     public func onSubmit(
         of triggers: SubmitTriggers = .text,
         _ action: @escaping () -> Void
