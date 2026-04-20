@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import UIKit
 import Testing
 @testable import SwiftUI_Kit
 
@@ -139,6 +138,39 @@ struct SKTextFieldTests {
         #expect(uiTextView.text == "Multiline")
         #expect(uiTextView.textColor == .label)
     }
+
+    @Test("onSubmit은 horizontal SKTextField 제출 시 실행된다")
+    func onSubmit_horizontalTextField() {
+        let submitModel = SubmitModel()
+        let uiTextField = makeTextField(
+            rootView: SubmitHorizontalHostView(
+                submitModel: submitModel
+            )
+        )
+
+        _ = uiTextField.delegate?.textFieldShouldReturn?(uiTextField)
+
+        #expect(submitModel.submitCount == 1)
+    }
+
+    @Test("onSubmit은 vertical SKTextField 제출 시 실행된다")
+    func onSubmit_verticalTextView() {
+        let submitModel = SubmitModel()
+        let uiTextView = makeTextView(
+            rootView: SubmitVerticalHostView(
+                submitModel: submitModel
+            )
+        )
+
+        let shouldChange = uiTextView.delegate?.textView?(
+            uiTextView,
+            shouldChangeTextIn: NSRange(location: 0, length: 0),
+            replacementText: "\n"
+        )
+
+        #expect(shouldChange == false)
+        #expect(submitModel.submitCount == 1)
+    }
 }
 
 private extension SKTextFieldTests {
@@ -159,6 +191,11 @@ private extension SKTextFieldTests {
     @MainActor
     final class TextModel: ObservableObject {
         @Published var text = ""
+    }
+
+    @MainActor
+    final class SubmitModel: ObservableObject {
+        @Published var submitCount = 0
     }
     
     struct BoolFocusHostView: View {
@@ -229,6 +266,37 @@ private extension SKTextFieldTests {
                 ),
                 axis: .vertical
             )
+        }
+    }
+
+    struct SubmitHorizontalHostView: View {
+        @ObservedObject var submitModel: SubmitModel
+        @State private var text = ""
+
+        var body: some View {
+            SKTextField(
+                "Title",
+                text: $text
+            )
+            .onSubmit {
+                submitModel.submitCount += 1
+            }
+        }
+    }
+
+    struct SubmitVerticalHostView: View {
+        @ObservedObject var submitModel: SubmitModel
+        @State private var text = ""
+
+        var body: some View {
+            SKTextField(
+                "Title",
+                text: $text,
+                axis: .vertical
+            )
+            .onSubmit {
+                submitModel.submitCount += 1
+            }
         }
     }
     
