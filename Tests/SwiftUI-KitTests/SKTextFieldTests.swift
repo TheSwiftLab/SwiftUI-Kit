@@ -98,6 +98,44 @@ struct SKTextFieldTests {
         runMainLoop()
         #expect(uiTextField.isFirstResponder == false)
     }
+
+    @Test("focused(_:) 이후 onSubmit은 SKTextField modifier를 유지한다")
+    func focusedThenOnSubmit_bindBoolFocusState() {
+        let submitModel = SubmitModel()
+        let uiTextField = makeTextField(
+            rootView: FocusedSubmitBoolHostView(
+                submitModel: submitModel
+            )
+        )
+
+        let becomeFirstResponder = uiTextField.becomeFirstResponder()
+        runMainLoop()
+
+        _ = uiTextField.delegate?.textFieldShouldReturn?(uiTextField)
+        runMainLoop()
+
+        #expect(becomeFirstResponder == true)
+        #expect(submitModel.submitCount == 1)
+    }
+
+    @Test("focused(_:equals:) 이후 onSubmit은 SKTextField modifier를 유지한다")
+    func focusedThenOnSubmit_bindOptionalFocusState() {
+        let submitModel = SubmitModel()
+        let uiTextField = makeTextField(
+            rootView: FocusedSubmitValueHostView(
+                submitModel: submitModel
+            )
+        )
+
+        let becomeFirstResponder = uiTextField.becomeFirstResponder()
+        runMainLoop()
+
+        _ = uiTextField.delegate?.textFieldShouldReturn?(uiTextField)
+        runMainLoop()
+
+        #expect(becomeFirstResponder == true)
+        #expect(submitModel.submitCount == 1)
+    }
     
     @Test("horizontal SKTextField는 UITextField를 렌더링하고 바인딩 값을 반영한다")
     func horizontalTextField_rendersUIKitTextField() {
@@ -324,6 +362,40 @@ private extension SKTextFieldTests {
                 text: $text,
                 axis: .vertical
             )
+            .onSubmit {
+                submitModel.submitCount += 1
+            }
+        }
+    }
+
+    struct FocusedSubmitBoolHostView: View {
+        @ObservedObject var submitModel: SubmitModel
+        @State private var text = ""
+        @FocusState private var isFocused: Bool
+
+        var body: some View {
+            SKTextField(
+                "Title",
+                text: $text
+            )
+            .focused($isFocused)
+            .onSubmit {
+                submitModel.submitCount += 1
+            }
+        }
+    }
+
+    struct FocusedSubmitValueHostView: View {
+        @ObservedObject var submitModel: SubmitModel
+        @State private var text = ""
+        @FocusState private var focusedField: SampleField?
+
+        var body: some View {
+            SKTextField(
+                "Title",
+                text: $text
+            )
+            .focused($focusedField, equals: .plain)
             .onSubmit {
                 submitModel.submitCount += 1
             }
