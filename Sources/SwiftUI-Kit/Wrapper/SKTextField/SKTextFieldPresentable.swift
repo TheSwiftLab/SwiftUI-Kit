@@ -282,6 +282,7 @@ extension SKTextFieldPresentable.Coordinator: UITextFieldDelegate {
 
     func textFieldShouldReturn(_ uiTextField: UITextField) -> Bool {
         parent.onSubmit?()
+        uiTextField.resignFirstResponder()
         return true
     }
 }
