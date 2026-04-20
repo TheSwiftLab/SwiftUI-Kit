@@ -10,7 +10,7 @@ import UIKit
 final class SKTextView: UITextView {
     var onHardwareSubmit: (() -> Void)?
 
-    // 하드웨어 키보드의 엔터키 입력을 먼저 감지해 제출 처리 여부를 판단한다.
+    // 하드웨어 키보드의 엔터키 입력을 먼저 감지해 onbSubmit 처리 여부를 판단한다.
     override func pressesBegan(
         _ uiPresses: Set<UIPress>,
         with uiPressesEvent: UIPressesEvent?
@@ -31,7 +31,7 @@ final class SKTextView: UITextView {
         resignFirstResponder()
     }
 
-    // 전달된 키 입력이 onSubmit로 처리되어야 하는 경우 즉시 제출 동작을 수행한다.
+    // 전달된 키 입력이 onSubmit로 처리되어야 하는 경우 즉시 동작을 수행한다.
     private func handleHardwareSubmitIfNeeded(
         for uiPresses: Set<UIPress>
     ) -> Bool {
