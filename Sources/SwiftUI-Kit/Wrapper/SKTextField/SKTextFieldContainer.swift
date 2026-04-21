@@ -9,7 +9,7 @@ import SwiftUI
 
 final class SKTextFieldContainer: UIView {
     let uiTextField: UITextField?
-    let uiTextView: UITextView?
+    let uiTextView: SKTextView?
     
     private let axis: Axis
     private var lastIntrinsicContentSize: CGSize?
@@ -22,7 +22,7 @@ final class SKTextFieldContainer: UIView {
             uiTextView = nil
         } else {
             uiTextField = nil
-            uiTextView = UITextView()
+            uiTextView = SKTextView()
         }
         
         super.init(frame: .zero)

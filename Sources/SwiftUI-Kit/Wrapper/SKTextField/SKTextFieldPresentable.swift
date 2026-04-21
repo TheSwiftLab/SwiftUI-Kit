@@ -12,6 +12,7 @@ struct SKTextFieldPresentable: UIViewRepresentable {
     let axis: Axis
     let placeholder: String
     let accessibilityLabel: String?
+    let onSubmit: (() -> Void)?
     let focusBinding: Binding<Bool>?
 
     func makeCoordinator() -> Coordinator {
@@ -92,8 +93,8 @@ struct SKTextFieldPresentable: UIViewRepresentable {
 }
 
 extension SKTextFieldPresentable {
-
-    final class Coordinator: NSObject, UITextFieldDelegate, UITextViewDelegate {
+    @MainActor
+    final class Coordinator: NSObject {
         var parent: SKTextFieldPresentable
 
         private weak var scrollView: UIScrollView?
@@ -111,62 +112,6 @@ extension SKTextFieldPresentable {
             parent.text = uiTextField.text ?? ""
         }
 
-        func textFieldDidBeginEditing(_ uiTextField: UITextField) {
-            if let focusBinding = parent.focusBinding, !focusBinding.wrappedValue {
-                focusBinding.wrappedValue = true
-            }
-        }
-
-        func textFieldDidEndEditing(_ uiTextField: UITextField) {
-            if let focusBinding = parent.focusBinding, focusBinding.wrappedValue {
-                focusBinding.wrappedValue = false
-            }
-        }
-
-        func textViewShouldBeginEditing(_ uiTextView: UITextView) -> Bool {
-            startTrackingOffset(for: uiTextView)
-            return true
-        }
-
-        func textViewDidBeginEditing(_ uiTextView: UITextView) {
-            if isShowingPlaceholder {
-                uiTextView.text = nil
-                uiTextView.textColor = .label
-                isShowingPlaceholder = false
-            }
-
-            if let focusBinding = parent.focusBinding, !focusBinding.wrappedValue {
-                focusBinding.wrappedValue = true
-            }
-
-            restoreOffsetIfNeeded()
-
-            DispatchQueue.main.async { [weak self] in
-                self?.restoreOffsetIfNeeded()
-                uiTextView.invalidateIntrinsicContentSize()
-                uiTextView.superview?.invalidateIntrinsicContentSize()
-            }
-        }
-
-        func textViewDidChange(_ uiTextView: UITextView) {
-            stopTrackingOffset()
-            parent.text = uiTextView.text
-            isShowingPlaceholder = false
-            uiTextView.invalidateIntrinsicContentSize()
-            uiTextView.superview?.invalidateIntrinsicContentSize()
-        }
-
-        func textViewDidEndEditing(_ uiTextView: UITextView) {
-            if let focusBinding = parent.focusBinding, focusBinding.wrappedValue {
-                focusBinding.wrappedValue = false
-            }
-
-            stopTrackingOffset()
-            applyPlaceholderIfNeeded(to: uiTextView)
-            uiTextView.invalidateIntrinsicContentSize()
-            uiTextView.superview?.invalidateIntrinsicContentSize()
-        }
-
         func applyConfiguration(to container: SKTextFieldContainer) {
             container.uiTextField?.accessibilityLabel = parent.accessibilityLabel
             container.uiTextView?.accessibilityLabel = parent.accessibilityLabel
@@ -177,6 +122,14 @@ extension SKTextFieldPresentable {
 
             if let uiTextView = container.uiTextView {
                 applyPlaceholderIfNeeded(to: uiTextView)
+                if parent.onSubmit == nil {
+                    uiTextView.onHardwareSubmit = nil
+                } else {
+                    uiTextView.onHardwareSubmit = {
+                        [weak self] in
+                        self?.handleHardwareSubmit()
+                    }
+                }
             }
         }
 
@@ -299,6 +252,75 @@ extension SKTextFieldPresentable {
             scrollView = nil
             trackedOffset = nil
         }
+
+        func updateFocus(_ isFocused: Bool) {
+            if let focusBinding = parent.focusBinding,
+               focusBinding.wrappedValue != isFocused {
+                focusBinding.wrappedValue = isFocused
+            }
+        }
+
+        func invalidateTextViewLayout(_ uiTextView: UITextView) {
+            uiTextView.invalidateIntrinsicContentSize()
+            uiTextView.superview?.invalidateIntrinsicContentSize()
+        }
+
+        func handleHardwareSubmit() {
+            parent.onSubmit?()
+        }
+    }
+}
+
+extension SKTextFieldPresentable.Coordinator: UITextFieldDelegate {
+    func textFieldDidBeginEditing(_ uiTextField: UITextField) {
+        updateFocus(true)
+    }
+
+    func textFieldDidEndEditing(_ uiTextField: UITextField) {
+        updateFocus(false)
+    }
+
+    func textFieldShouldReturn(_ uiTextField: UITextField) -> Bool {
+        parent.onSubmit?()
+        uiTextField.resignFirstResponder()
+        return true
+    }
+}
+
+extension SKTextFieldPresentable.Coordinator: UITextViewDelegate {
+    func textViewShouldBeginEditing(_ uiTextView: UITextView) -> Bool {
+        startTrackingOffset(for: uiTextView)
+        return true
+    }
+
+    func textViewDidBeginEditing(_ uiTextView: UITextView) {
+        if isShowingPlaceholder {
+            uiTextView.text = nil
+            uiTextView.textColor = .label
+            isShowingPlaceholder = false
+        }
+
+        updateFocus(true)
+        restoreOffsetIfNeeded()
+
+        DispatchQueue.main.async { [weak self] in
+            self?.restoreOffsetIfNeeded()
+            self?.invalidateTextViewLayout(uiTextView)
+        }
+    }
+
+    func textViewDidChange(_ uiTextView: UITextView) {
+        stopTrackingOffset()
+        parent.text = uiTextView.text
+        isShowingPlaceholder = false
+        invalidateTextViewLayout(uiTextView)
+    }
+
+    func textViewDidEndEditing(_ uiTextView: UITextView) {
+        updateFocus(false)
+        stopTrackingOffset()
+        applyPlaceholderIfNeeded(to: uiTextView)
+        invalidateTextViewLayout(uiTextView)
     }
 }
 

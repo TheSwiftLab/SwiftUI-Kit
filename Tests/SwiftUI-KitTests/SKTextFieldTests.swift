@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import UIKit
 import Testing
 @testable import SwiftUI_Kit
 
@@ -99,6 +98,44 @@ struct SKTextFieldTests {
         runMainLoop()
         #expect(uiTextField.isFirstResponder == false)
     }
+
+    @Test("focused(_:) 이후 onSubmit은 SKTextField modifier를 유지한다")
+    func focusedThenOnSubmit_bindBoolFocusState() {
+        let submitModel = SubmitModel()
+        let uiTextField = makeTextField(
+            rootView: FocusedSubmitBoolHostView(
+                submitModel: submitModel
+            )
+        )
+
+        let becomeFirstResponder = uiTextField.becomeFirstResponder()
+        runMainLoop()
+
+        _ = uiTextField.delegate?.textFieldShouldReturn?(uiTextField)
+        runMainLoop()
+
+        #expect(becomeFirstResponder == true)
+        #expect(submitModel.submitCount == 1)
+    }
+
+    @Test("focused(_:equals:) 이후 onSubmit은 SKTextField modifier를 유지한다")
+    func focusedThenOnSubmit_bindOptionalFocusState() {
+        let submitModel = SubmitModel()
+        let uiTextField = makeTextField(
+            rootView: FocusedSubmitValueHostView(
+                submitModel: submitModel
+            )
+        )
+
+        let becomeFirstResponder = uiTextField.becomeFirstResponder()
+        runMainLoop()
+
+        _ = uiTextField.delegate?.textFieldShouldReturn?(uiTextField)
+        runMainLoop()
+
+        #expect(becomeFirstResponder == true)
+        #expect(submitModel.submitCount == 1)
+    }
     
     @Test("horizontal SKTextField는 UITextField를 렌더링하고 바인딩 값을 반영한다")
     func horizontalTextField_rendersUIKitTextField() {
@@ -139,6 +176,69 @@ struct SKTextFieldTests {
         #expect(uiTextView.text == "Multiline")
         #expect(uiTextView.textColor == .label)
     }
+
+    @Test("onSubmit은 horizontal SKTextField에서 동작 후 포커스를 해제한다")
+    func onSubmit_horizontalTextField() {
+        let submitModel = SubmitModel()
+        let uiTextField = makeTextField(
+            rootView: SubmitHorizontalHostView(
+                submitModel: submitModel
+            )
+        )
+
+        let becomeFirstResponder = uiTextField.becomeFirstResponder()
+        runMainLoop()
+
+        _ = uiTextField.delegate?.textFieldShouldReturn?(uiTextField)
+        runMainLoop()
+
+        #expect(becomeFirstResponder == true)
+        #expect(submitModel.submitCount == 1)
+        #expect(uiTextField.isFirstResponder == false)
+    }
+
+    @Test("onSubmit은 vertical SKTextField에서 소프트웨어 개행을 허용한다")
+    func onSubmit_verticalTextView_withSoftwareKeyboard() {
+        let submitModel = SubmitModel()
+        let uiTextView = makeTextView(
+            rootView: SubmitVerticalHostView(
+                submitModel: submitModel
+            )
+        )
+
+        let becomeFirstResponder = uiTextView.becomeFirstResponder()
+        runMainLoop()
+
+        uiTextView.insertText("A")
+        uiTextView.insertText("\n")
+        runMainLoop()
+
+        #expect(becomeFirstResponder == true)
+        #expect(uiTextView.text == "A\n")
+        #expect(submitModel.submitCount == 0)
+    }
+
+    @Test("onSubmit은 vertical SKTextField에서 하드웨어 입력일 때 동작 후 포커스를 해제한다")
+    func onSubmit_verticalTextView_withHardwareKeyboard() {
+        let submitModel = SubmitModel()
+        let uiTextView = makeTextView(
+            rootView: SubmitVerticalHostView(
+                submitModel: submitModel
+            )
+        )
+
+        let becomeFirstResponder = uiTextView.becomeFirstResponder()
+        runMainLoop()
+
+        (uiTextView as? SKTextView)?
+            .triggerHardwareSubmit()
+        runMainLoop()
+
+        #expect(becomeFirstResponder == true)
+        #expect(submitModel.submitCount == 1)
+        #expect(uiTextView.isFirstResponder == false)
+    }
+
 }
 
 private extension SKTextFieldTests {
@@ -159,6 +259,11 @@ private extension SKTextFieldTests {
     @MainActor
     final class TextModel: ObservableObject {
         @Published var text = ""
+    }
+
+    @MainActor
+    final class SubmitModel: ObservableObject {
+        @Published var submitCount = 0
     }
     
     struct BoolFocusHostView: View {
@@ -231,7 +336,72 @@ private extension SKTextFieldTests {
             )
         }
     }
-    
+
+    struct SubmitHorizontalHostView: View {
+        @ObservedObject var submitModel: SubmitModel
+        @State private var text = ""
+
+        var body: some View {
+            SKTextField(
+                "Title",
+                text: $text
+            )
+            .onSubmit {
+                submitModel.submitCount += 1
+            }
+        }
+    }
+
+    struct SubmitVerticalHostView: View {
+        @ObservedObject var submitModel: SubmitModel
+        @State private var text = ""
+
+        var body: some View {
+            SKTextField(
+                "Title",
+                text: $text,
+                axis: .vertical
+            )
+            .onSubmit {
+                submitModel.submitCount += 1
+            }
+        }
+    }
+
+    struct FocusedSubmitBoolHostView: View {
+        @ObservedObject var submitModel: SubmitModel
+        @State private var text = ""
+        @FocusState private var isFocused: Bool
+
+        var body: some View {
+            SKTextField(
+                "Title",
+                text: $text
+            )
+            .focused($isFocused)
+            .onSubmit {
+                submitModel.submitCount += 1
+            }
+        }
+    }
+
+    struct FocusedSubmitValueHostView: View {
+        @ObservedObject var submitModel: SubmitModel
+        @State private var text = ""
+        @FocusState private var focusedField: SampleField?
+
+        var body: some View {
+            SKTextField(
+                "Title",
+                text: $text
+            )
+            .focused($focusedField, equals: .plain)
+            .onSubmit {
+                submitModel.submitCount += 1
+            }
+        }
+    }
+
     func makeTextField<Content: View>(
         rootView: Content
     ) -> UITextField {

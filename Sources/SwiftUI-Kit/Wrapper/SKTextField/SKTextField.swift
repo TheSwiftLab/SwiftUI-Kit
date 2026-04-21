@@ -45,6 +45,8 @@ public struct SKTextField<Label: View>: View {
     private let title: Title
     private var focusValue: (() -> Bool)?
     private var onFocusChange: ((Bool) -> Void)?
+    private var focusModifier: ((AnyView) -> AnyView)?
+    private var onSubmitAction: (() -> Void)?
     
     /// 로컬라이즈된 제목 문자열로 텍스트 필드를 생성합니다.
     ///
@@ -137,26 +139,74 @@ public struct SKTextField<Label: View>: View {
     }
     
     public var body: some View {
-        SKTextFieldPresentable(
-            text: $text,
-            axis: axis,
-            placeholder: placeholder,
-            accessibilityLabel: accessibilityLabel,
-            focusBinding: {
-                if let focusValue, let onFocusChange {
-                    return Binding(
-                        get: {
-                            focusValue()
-                        },
-                        set: { newValue in
-                            onFocusChange(newValue)
-                        }
-                    )
-                }
-                
-                return nil
-            }()
+        let content = AnyView(
+            SKTextFieldPresentable(
+                text: $text,
+                axis: axis,
+                placeholder: placeholder,
+                accessibilityLabel: accessibilityLabel,
+                onSubmit: submitAction,
+                focusBinding: {
+                    if let focusValue, let onFocusChange {
+                        return Binding(
+                            get: {
+                                focusValue()
+                            },
+                            set: { newValue in
+                                onFocusChange(newValue)
+                            }
+                        )
+                    }
+
+                    return nil
+                }()
+            )
         )
+
+        if let focusModifier {
+            return focusModifier(content)
+        }
+
+        return content
+    }
+
+    /// onSubmit 시 실행할 동작을 등록합니다.
+    ///
+    /// SwiftUI `View.onSubmit(_:)`와 같은 형태로 사용할 수 있습니다.
+    /// `SKTextField`가 한 줄 입력(`axis: .horizontal`)인 경우에는 Return 입력 시 `onSubmit`이 실행됩니다.
+    /// 여러 줄 입력(`axis: .vertical`)인 경우에는 소프트웨어 키보드의 Return 입력이 줄바꿈으로 처리되고,
+    /// 하드웨어 키보드의 Return 입력일 때만 `onSubmit`이 실행됩니다.
+    ///
+    /// ## 사용 예시
+    /// ```swift
+    /// @State private var message = ""
+    /// @State private var submittedMessage = ""
+    ///
+    /// SKTextField("메시지", text: $message)
+    ///     .onSubmit {
+    ///         submittedMessage = message
+    ///     }
+    /// ```
+    ///
+    /// ```swift
+    /// @State private var note = ""
+    /// @State private var submittedNote = ""
+    ///
+    /// SKTextField("메모", text: $note, axis: .vertical)
+    ///     .onSubmit {
+    ///         submittedNote = note
+    ///     }
+    /// ```
+    ///
+    /// - Parameter action: onSubmit 시 실행할 클로저입니다.
+    public func onSubmit(_ action: @escaping () -> Void) -> Self {
+        var copy = self
+        let previousAction = copy.onSubmitAction
+        copy.onSubmitAction = {
+            previousAction?()
+            action()
+        }
+        return copy
     }
     
     /// `Bool` 기반 `FocusState`와 텍스트 필드를 연결합니다.
@@ -173,7 +223,7 @@ public struct SKTextField<Label: View>: View {
     /// SKTextField("이름", text: $name)
     ///     .focused($isNameFocused)
     /// ```
-    public func focused(_ condition: FocusState<Bool>.Binding) -> some View {
+    public func focused(_ condition: FocusState<Bool>.Binding) -> Self {
         var copy = self
         copy.focusValue = {
             condition.wrappedValue
@@ -183,9 +233,11 @@ public struct SKTextField<Label: View>: View {
                 condition.wrappedValue = newValue
             }
         }
-        
-        return AnyView(copy)
-            .focused(condition)
+        copy.focusModifier = { content in
+            AnyView(content.focused(condition))
+        }
+
+        return copy
     }
     
     /// 값 비교 기반 `FocusState`와 텍스트 필드를 연결합니다.
@@ -211,7 +263,7 @@ public struct SKTextField<Label: View>: View {
     public func focused<Value>(
         _ binding: FocusState<Value?>.Binding,
         equals value: Value
-    ) -> some View where Value: Hashable {
+    ) -> Self where Value: Hashable {
         var copy = self
         copy.focusValue = {
             binding.wrappedValue == value
@@ -225,12 +277,16 @@ public struct SKTextField<Label: View>: View {
                 }
             }
         }
-        
-        return AnyView(copy)
-            .focused(
-                binding,
-                equals: value
+        copy.focusModifier = { content in
+            AnyView(
+                content.focused(
+                    binding,
+                    equals: value
+                )
             )
+        }
+
+        return copy
     }
     
     private var placeholder: String {
@@ -253,6 +309,10 @@ public struct SKTextField<Label: View>: View {
         case .plain(let plainText):
             return plainText
         }
+    }
+
+    private var submitAction: (() -> Void)? {
+        return onSubmitAction
     }
     
     private enum Title {
