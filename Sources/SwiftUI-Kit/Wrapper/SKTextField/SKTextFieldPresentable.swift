@@ -324,6 +324,49 @@ extension SKTextFieldPresentable.Coordinator: UITextViewDelegate {
     }
 }
 
+private extension Optional where Wrapped == SubmitLabel {
+    var returnKeyType: UIReturnKeyType {
+        guard let self else {
+            return .default
+        }
+
+        return self.returnKeyType
+    }
+}
+
+private extension SubmitLabel {
+    var returnKeyType: UIReturnKeyType {
+        guard let role = Mirror(reflecting: self).children.first(
+            where: { $0.label == "role" }
+        )?.value else {
+            return .default
+        }
+
+        switch String(describing: role) {
+        case "continue":
+            return .continue
+        case "done":
+            return .done
+        case "go":
+            return .go
+        case "join":
+            return .join
+        case "next":
+            return .next
+        case "return":
+            return .default
+        case "route":
+            return .route
+        case "search":
+            return .search
+        case "send":
+            return .send
+        default:
+            return .default
+        }
+    }
+}
+
 private extension UIView {
     var enclosingScrollView: UIScrollView? {
         var currentSuperview = superview
