@@ -12,6 +12,7 @@ struct SKTextFieldPresentable: UIViewRepresentable {
     let axis: Axis
     let placeholder: String
     let accessibilityLabel: String?
+    let submitLabel: SubmitLabel?
     let onSubmit: (() -> Void)?
     let focusBinding: Binding<Bool>?
 
@@ -117,10 +118,12 @@ extension SKTextFieldPresentable {
             container.uiTextView?.accessibilityLabel = parent.accessibilityLabel
 
             if let uiTextField = container.uiTextField {
+                uiTextField.returnKeyType = parent.submitLabel.returnKeyType
                 applyPlaceholder(to: uiTextField)
             }
 
             if let uiTextView = container.uiTextView {
+                uiTextView.returnKeyType = parent.submitLabel.returnKeyType
                 applyPlaceholderIfNeeded(to: uiTextView)
                 if parent.onSubmit == nil {
                     uiTextView.onHardwareSubmit = nil
