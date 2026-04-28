@@ -12,6 +12,7 @@ struct SKTextFieldPresentable: UIViewRepresentable {
     let axis: Axis
     let placeholder: String
     let accessibilityLabel: String?
+    let submitLabel: SubmitLabel?
     let onSubmit: (() -> Void)?
     let focusBinding: Binding<Bool>?
 
@@ -117,10 +118,18 @@ extension SKTextFieldPresentable {
             container.uiTextView?.accessibilityLabel = parent.accessibilityLabel
 
             if let uiTextField = container.uiTextField {
+                let returnKeyType = parent.submitLabel.returnKeyType
+                if uiTextField.returnKeyType != returnKeyType {
+                    uiTextField.returnKeyType = returnKeyType
+                }
                 applyPlaceholder(to: uiTextField)
             }
 
             if let uiTextView = container.uiTextView {
+                let returnKeyType = parent.submitLabel.returnKeyType
+                if uiTextView.returnKeyType != returnKeyType {
+                    uiTextView.returnKeyType = returnKeyType
+                }
                 applyPlaceholderIfNeeded(to: uiTextView)
                 if parent.onSubmit == nil {
                     uiTextView.onHardwareSubmit = nil
@@ -321,6 +330,49 @@ extension SKTextFieldPresentable.Coordinator: UITextViewDelegate {
         stopTrackingOffset()
         applyPlaceholderIfNeeded(to: uiTextView)
         invalidateTextViewLayout(uiTextView)
+    }
+}
+
+private extension Optional where Wrapped == SubmitLabel {
+    var returnKeyType: UIReturnKeyType {
+        guard let self else {
+            return .default
+        }
+
+        return self.returnKeyType
+    }
+}
+
+private extension SubmitLabel {
+    var returnKeyType: UIReturnKeyType {
+        guard let role = Mirror(reflecting: self).children.first(
+            where: { $0.label == "role" }
+        )?.value else {
+            return .default
+        }
+
+        switch String(describing: role) {
+        case "continue":
+            return .continue
+        case "done":
+            return .done
+        case "go":
+            return .go
+        case "join":
+            return .join
+        case "next":
+            return .next
+        case "return":
+            return .default
+        case "route":
+            return .route
+        case "search":
+            return .search
+        case "send":
+            return .send
+        default:
+            return .default
+        }
     }
 }
 

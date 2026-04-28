@@ -47,6 +47,7 @@ public struct SKTextField<Label: View>: View {
     private var onFocusChange: ((Bool) -> Void)?
     private var focusModifier: ((AnyView) -> AnyView)?
     private var onSubmitAction: (() -> Void)?
+    private var submitLabel: SubmitLabel?
     
     /// 로컬라이즈된 제목 문자열로 텍스트 필드를 생성합니다.
     ///
@@ -145,6 +146,7 @@ public struct SKTextField<Label: View>: View {
                 axis: axis,
                 placeholder: placeholder,
                 accessibilityLabel: accessibilityLabel,
+                submitLabel: submitLabel,
                 onSubmit: submitAction,
                 focusBinding: {
                     if let focusValue, let onFocusChange {
@@ -206,6 +208,26 @@ public struct SKTextField<Label: View>: View {
             previousAction?()
             action()
         }
+        return copy
+    }
+
+    /// 키보드 Return 버튼의 표시 방식을 설정합니다.
+    ///
+    /// SwiftUI `View.submitLabel(_:)`와 같은 형태로 사용할 수 있습니다.
+    /// `submitLabel`은 키보드 Return 버튼의 표시만 변경하며, submit 동작은 `onSubmit`으로 등록합니다.
+    ///
+    /// ## 사용 예시
+    /// ```swift
+    /// @State private var keyword = ""
+    ///
+    /// SKTextField("검색", text: $keyword)
+    ///     .submitLabel(.search)
+    /// ```
+    ///
+    /// - Parameter submitLabel: 키보드 Return 버튼에 표시할 submit label입니다.
+    public func submitLabel(_ submitLabel: SubmitLabel) -> Self {
+        var copy = self
+        copy.submitLabel = submitLabel
         return copy
     }
     

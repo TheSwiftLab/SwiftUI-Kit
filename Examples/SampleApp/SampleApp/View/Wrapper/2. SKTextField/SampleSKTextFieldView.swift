@@ -30,6 +30,11 @@ public struct SampleSKTextFieldView: View {
                 .tabItem {
                     Label("onSubmit", systemImage: "arrow.turn.down.left")
                 }
+
+            SampleSKTextFieldSubmitLabelTabView()
+                .tabItem {
+                    Label("submitLabel", systemImage: "keyboard")
+                }
         }
     }
 }
