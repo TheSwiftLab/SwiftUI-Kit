@@ -13,7 +13,7 @@ import Testing
 struct SKTextFieldSubmitLabelTests {
 
     @Test("submitLabel은 모든 SubmitLabel 값을 UITextField returnKeyType으로 매핑한다")
-    func submitLabel_mapsAllCasesToTextFieldReturnKeyType() {
+    func submitLabel_mapsAllCasesToTextFieldReturnKeyType() throws {
         let cases = [
             (SubmitLabel.continue, UIReturnKeyType.continue),
             (.done, .done),
@@ -27,7 +27,7 @@ struct SKTextFieldSubmitLabelTests {
         ]
 
         for (submitLabel, expectedReturnKeyType) in cases {
-            let uiTextField = makeTextField(
+            let uiTextField = try makeTextField(
                 rootView: SubmitLabelHorizontalHostView(
                     submitLabel: submitLabel
                 )
@@ -38,8 +38,8 @@ struct SKTextFieldSubmitLabelTests {
     }
 
     @Test("submitLabel은 UITextView returnKeyType에 반영된다")
-    func submitLabel_appliesToTextViewReturnKeyType() {
-        let uiTextView = makeTextView(
+    func submitLabel_appliesToTextViewReturnKeyType() throws {
+        let uiTextView = try makeTextView(
             rootView: SubmitLabelVerticalHostView(
                 submitLabel: .search
             )
@@ -79,7 +79,7 @@ private extension SKTextFieldSubmitLabelTests {
 
     func makeTextField<Content: View>(
         rootView: Content
-    ) -> UITextField {
+    ) throws -> UITextField {
         let uiWindow = UIWindow(
             frame: UIScreen.main.bounds
         )
@@ -91,13 +91,12 @@ private extension SKTextFieldSubmitLabelTests {
         uiWindow.makeKeyAndVisible()
         runMainLoop()
 
-        return findTextField(in: uiHostingController.view)
-        ?? UITextField()
+        return try #require(findTextField(in: uiHostingController.view))
     }
 
     func makeTextView<Content: View>(
         rootView: Content
-    ) -> UITextView {
+    ) throws -> UITextView {
         let uiWindow = UIWindow(
             frame: UIScreen.main.bounds
         )
@@ -109,8 +108,7 @@ private extension SKTextFieldSubmitLabelTests {
         uiWindow.makeKeyAndVisible()
         runMainLoop()
 
-        return findTextView(in: uiHostingController.view)
-        ?? UITextView()
+        return try #require(findTextView(in: uiHostingController.view))
     }
 
     func findTextField(in view: UIView) -> UITextField? {
